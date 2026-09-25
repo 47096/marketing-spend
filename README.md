@@ -60,10 +60,10 @@ Regress `sales` on advertising spend — simple (total) vs multiple (per channel
 
 ### Two models on one dataset
 
-| Script | Approach | Features | R² |
-|--------|----------|----------|-----|
-| `01-total-spend.R` | Base R `lm()` | total spend | **0.753** |
-| `02-per-channel.R` | tidymodels `linear_reg()` | youtube, facebook, newspaper | **0.901** (test ~0.925) |
+| Step in `analysis.R` | Approach | Features | R² |
+|----------------------|----------|----------|-----|
+| 1. Simple | Base R `lm()` | total spend | **0.753** |
+| 2. Per-channel | tidymodels `linear_reg()` | youtube, facebook, newspaper | **0.901** (test ~0.925) |
 
 ### Simple model
 ```
@@ -97,8 +97,7 @@ cd marketing-spend
 
 ```r
 source("setup.R")
-source("01-total-spend.R")
-source("02-per-channel.R")
+source("analysis.R")
 ```
 
 **Stack:** R · `tidyverse` · `tidymodels` · `Metrics` · `broom` · `vip`
