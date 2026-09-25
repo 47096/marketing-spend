@@ -1,119 +1,112 @@
-# Linear Regression in R
+# Where should the next marketing dollar go?
 
-Predicting sales from advertising spend — simple vs multiple linear regression, from manual `lm()` to tidymodels workflow.
+**A budget problem, solved with channel data.**
 
-## Problem
+Marketing spend is not one pot — it is **YouTube, Facebook, newspaper, and a board that wants returns**. I help teams see **which channel actually pays** so budget follows evidence, not habit.
 
-How much does each marketing channel contribute to sales? This project builds two models on the same dataset: a simple linear regression (total spend → sales) and a multiple linear regression (youtube, facebook, newspaper → sales) to show how adding features changes model performance.
+---
 
-## What's Inside
+## The stake
+
+If you spread spend evenly, you subsidise the weak channel. If you only trust last-click, you underfund discovery. The expensive mistake is **paying for media that does not move sales**.
+
+## The story
+
+You have spend and sales by channel. Two honest questions:
+
+1. Does **total marketing spend** even predict sales?  
+2. If we split it, **which channel earns its keep**?
+
+I built both: a simple spend→sales model, then a per-channel model. Same data. Different decisions.
+
+**Outcome on this build:**
+- Total spend explains a lot of sales movement (**R² ≈ 0.75**)  
+- **Per-channel is much sharper (R² ≈ 0.90+)** — you can act on it  
+- **Facebook had the highest per-dollar return** in this dataset  
+- **Newspaper showed no reliable effect** — candidate to cut or test harder  
+
+> **The commercial idea:** stop asking “are we spending enough?” Ask **“which dollar works?”**
+
+---
+
+## What that looks like in your world
+
+| You have | I turn it into |
+|----------|----------------|
+| Channel spend + revenue exports | **Per-channel contribution** |
+| “We always put X% in this channel” | Evidence to **reallocate** |
+| Agency reports full of impressions | **Sales-linked** read on efficiency |
+| A budget fight next week | A simple **spend vs return** view |
+
+**Typical engagement:** connect spend and outcome data → model contribution → recommend a test/reallocate plan (not a black-box “AI budget tool”).
+
+**[Talk to me about marketing spend →](https://datafying.co/#contactus)** · [datafying](https://datafying.co/)
+
+---
+
+## Why marketing leaders bring me in
+
+- Starts from **budget language**, not regression jargon  
+- Compares **simple vs richer models** so you see what more detail buys  
+- Flags channels that **don’t earn their keep**  
+- Honest about limits: correlation ≠ full causality without a test design  
+
+---
+
+## Proof of craft *(technical)*
+
+### Job
+Regress `sales` on advertising spend — simple (total) vs multiple (per channel).
+
+### Two models on one dataset
 
 | Script | Approach | Features | R² |
 |--------|----------|----------|-----|
-| `simple linear regression.R` | Base R `lm()` | `all_channels` (sum of all spend) | 0.753 |
-| `multiple linear regression.R` | tidymodels `linear_reg()` | youtube, facebook, newspaper separately | 0.901 |
+| `01-total-spend.R` | Base R `lm()` | total spend | **0.753** |
+| `02-per-channel.R` | tidymodels `linear_reg()` | youtube, facebook, newspaper | **0.901** (test ~0.925) |
 
-## Results
-
-### Simple Linear Regression (Total Spend → Sales)
-
-| Metric | Value |
-|--------|-------|
-| R² | 0.753 |
-| RMSE | 3.10 |
-| MAE | 2.34 |
-| Intercept | 5.09 |
-| Coefficient | 0.049 |
-
-75% of sales variability is explained by total marketing spend alone.
-
+### Simple model
 ```
 predicted_sales = 5.09 + 0.049 × total_spend
 ```
+RMSE 3.10 · MAE 2.34 — useful baseline.
 
-- $0 spend → predicted sales = $5.09 (baseline)
-- $300 spend → predicted sales = $19.70
+### Per-channel model
 
-### Multiple Linear Regression (Per-Channel → Sales)
+| Channel | Coefficient | p-value | Read as |
+|---------|-------------|---------|---------|
+| Facebook | 0.190 | ≈ 0 | Highest **per-dollar** return in this data |
+| YouTube | 0.046 | ≈ 0 | Real effect, weaker per dollar |
+| Newspaper | 0.005 | 0.418 | **Not significant** — don’t trust the point estimate |
 
-| Metric | Value |
-|--------|-------|
-| R² (train) | 0.901 |
-| R² (test) | 0.925 |
-| RMSE (test) | 1.74 |
-| Intercept | 3.31 |
+**So what for a budget holder:** RMSE fell **3.10 → 1.74** when channels were separated. That is the difference between “spend more” and “spend differently.”
 
-| Channel | Coefficient | p-value | Interpretation |
-|---------|-------------|---------|---------------|
-| YouTube | 0.046 | < 2e-16 | Strongest predictor — every $1 on YouTube → $0.046 in sales |
-| Facebook | 0.190 | 1.38e-44 | Highest per-dollar return — every $1 on Facebook → $0.19 in sales |
-| Newspaper | 0.005 | 0.418 | Not statistically significant |
+### Limits (honesty)
+- Observational data — **not** a media experiment; run a holdout/geo test before a hard reallocation  
+- No adstock / saturation (not full MMM)  
+- Linearity and market regime can shift; refresh on a cadence  
 
-Adding channels as separate features boosts R² from 0.75 → 0.90. The key insight: **Facebook has the highest per-dollar return** (0.19 vs 0.046), but YouTube's coefficient is also significant because it has higher absolute spend in the data.
+---
 
-## Key Findings
-
-- **Newspaper advertising has no measurable effect** — p-value of 0.418, not significant at any reasonable threshold
-- **Facebook is 4x more effective per dollar** than YouTube (0.19 vs 0.046)
-- **Total spend explains 75%** of sales — channel breakdown pushes it to 90%
-- **RMSE drops from 3.10 to 1.74** when separating channels — 44% improvement
-
-## Setup
+## Reproduce
 
 ```bash
-git clone https://github.com/wsamuelw/linear-regression-in-r.git
-cd linear-regression-in-r
+git clone https://github.com/47096/marketing-spend.git
+cd marketing-spend
 ```
 
 ```r
-install.packages(c("tidyverse", "tidymodels", "Metrics", "broom", "vip"))
-source("simple linear regression.R")
+source("setup.R")
+source("01-total-spend.R")
+source("02-per-channel.R")
 ```
 
-## Data
+**Stack:** R · `tidyverse` · `tidymodels` · `Metrics` · `broom` · `vip`
 
-**Marketing** — from `datarium` package. 200 observations of advertising spend across three channels and resulting sales.
+---
 
-| Feature | Min | Median | Max | Unit |
-|---------|-----|--------|-----|------|
-| youtube | 0.84 | 179.70 | 355.68 | $ spent |
-| facebook | 0.00 | 27.48 | 59.52 | $ spent |
-| newspaper | 0.36 | 30.90 | 136.80 | $ spent |
-| sales | 1.92 | 15.48 | 32.40 | units sold |
+## Next step
 
-## Linear Regression in 30 Seconds
+If the budget meeting is coming up and the channel debate is vibes-based — that is the engagement I run.
 
-**Simple**: one feature → one coefficient
-
-```
-y = β₀ + β₁x
-```
-
-**Multiple**: many features → many coefficients
-
-```
-y = β₀ + β₁x₁ + β₂x₂ + β₃x₃
-```
-
-**Evaluation**:
-- **R²** — % of variance explained (higher = better, max 1.0)
-- **RMSE** — average prediction error in original units (lower = better)
-- **p-value** — is this feature statistically significant? (p < 0.05 = yes)
-
-## Tech Stack
-
-- **base R** — `lm()` for simple regression
-- **tidymodels** — `linear_reg()` for multiple regression
-- **broom** — tidy model summaries
-- **vip** — feature importance plots
-- **Metrics** — RMSE, MSE, MAE calculations
-- **datarium** — marketing dataset
-
-## References
-
-- [Evaluating regression models](https://towardsdatascience.com/what-are-the-best-metrics-to-evaluate-your-regression-model-418ca481755b)
-- [datarium marketing data](https://rpkgs.datarium/reference/marketing.html)
-
-## License
-
-MIT
+**[Book a conversation →](https://datafying.co/#contactus)** · Customer & marketing analytics · [datafying](https://datafying.co/)
